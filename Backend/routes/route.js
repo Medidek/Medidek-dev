@@ -9,6 +9,7 @@ const doctorController = require("../controllers/addHospDoctor");
 const staffController = require("../controllers/addStaff");
 const docDetailsController = require("../controllers/fetchHospitalWithDoc")
 const staffDetailsController = require("../controllers/fetchHospWithStaff")
+const hospDetailsController = require("../controllers/fetchHospDetails")
 const middleware = require('../middleware/uploadFile')
 //const url = require('../middlewares/aws')
 
@@ -19,6 +20,7 @@ router.post("/hospital/doctor/profile", middleware.upload, doctorController.addD
 router.post("/hospital/staff/profile", middleware.upload, staffController.addStaffProfile);
 router.get("/hospital/doctor/:hospital_id", docDetailsController.getHospWithDoc);
 router.get("/hospital/staff/:hospital_id", staffDetailsController.getHospWithStaff);
+router.get("/hospital/details/:hospital_id", hospDetailsController.getHospDetails);
 
 
 module.exports = router;
