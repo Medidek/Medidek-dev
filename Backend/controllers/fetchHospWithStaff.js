@@ -1,7 +1,7 @@
 const dbConnection = require("../utils/mysql")
 const validator = require("../middleware/validation")
 
-const getHospitalDetails = async function (req, res) {
+const getHospWithStaff = async function (req, res) {
     try {
         //reading userid from path
         const hospitalId = req.params.hospital_id;
@@ -16,16 +16,13 @@ const getHospitalDetails = async function (req, res) {
         hp.name AS hospital_name,
         uh.email,
         uh.phone,
-        dp.name AS doctor_name,
-        dp.specialty,
         sp.name AS staff_name,
-        sp.designation
+        sp.designation,
+        sp.photo AS staff_photo
     FROM
         hospital_profile hp
     JOIN
         master_user_hospital uh ON hp.uuid = uh.uuid
-    LEFT JOIN
-        doctor_profile dp ON uh.uuid = dp.hospital_id
     LEFT JOIN
         staff_profile sp ON uh.uuid = sp.hospital_id
     WHERE
@@ -39,7 +36,7 @@ const getHospitalDetails = async function (req, res) {
             });
         });            //no users found
         if (!hospitalDetails) {
-            return res.status(404).send({ status: false, message: "No hospital details found" });
+            return res.status(404).send({ status: false, message: "No staff details are found for this hospital" });
         }
         console.log(hospitalDetails)
         
@@ -52,4 +49,4 @@ const getHospitalDetails = async function (req, res) {
     }
 }
 
-module.exports = { getHospitalDetails }
+module.exports = { getHospWithStaff }

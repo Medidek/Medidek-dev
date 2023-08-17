@@ -14,7 +14,7 @@ const addDoctorProfile = async function (req, res) {
             return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
         }
 
-        const { hospital_id, doctor_id, name, qualification, specialty, experience, photo, phone, email, password, fees, time } = body
+        const { hospital_id, doctor_id, name, qualification, specialty, experience, photo, rating, phone, email, password, fees, time } = body
 
         // Email is Mandatory...
         if (!validator.isValid(hospital_id)) {
@@ -100,10 +100,10 @@ const addDoctorProfile = async function (req, res) {
             return res.status(400).send({ status: false, msg: "Time is required" })
         };
 
-        let filterBody = [hospital_id, uuid, name, qualification, specialty, experience, doctorPhoto, phone, email, passwordValue, fees, time]
+        let filterBody = [hospital_id, uuid, name, qualification, specialty, experience, doctorPhoto, rating, phone, email, passwordValue, fees, time]
 
-        const sql = `INSERT INTO doctor_profile (hospital_id, doctor_id, name, qualification, specialty, experience, photo, phone, email, password, fees, time )
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        const sql = `INSERT INTO doctor_profile (hospital_id, doctor_id, name, qualification, specialty, experience, photo, rating, phone, email, password, fees, time )
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         console.log(filterBody)
         dbConnection.query(sql, filterBody, (error, results) => {
