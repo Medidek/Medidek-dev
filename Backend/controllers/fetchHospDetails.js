@@ -28,10 +28,9 @@ const getHospDetails = async function (req, res) {
         if (!hospitalDetails) {
             return res.status(404).send({ status: false, message: "No hospital details are found" });
         }
-        console.log(hospitalDetails)
         
         //return user in response
-        return res.status(200).send({ status: true, message: "Success", data: hospitalDetails });
+        return res.status(200).send({ status: true, message: "Success", data: hospitalDetails[0] });
 
 
     } catch (error) {
