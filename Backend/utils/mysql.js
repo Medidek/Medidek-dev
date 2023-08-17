@@ -1,5 +1,12 @@
 const mysql = require('mysql');
 
+// const connection = mysql.createConnection({
+//   host: 'medidekdb.cxajit2uhdcv.us-east-1.rds.amazonaws.com',
+//   user: 'root',
+//   password: 'jivtodeRitu',
+//   database: 'medidek_schema'
+// });
+
 const connection = mysql.createConnection({
   host: process.env.MYSQL_HOST,
   user: process.env.MYSQL_USER,

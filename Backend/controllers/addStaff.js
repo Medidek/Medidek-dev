@@ -78,14 +78,18 @@ const addStaffProfile = async function (req, res) {
         // now we set user password to hashed password
         passwordValue = await bcrypt.hash("medidekPass@123", salt);
 
-        let filterBody = [hospital_id, uuid, name, designation, phone, email, passwordValue]
+        // Check if the photo field exists in the request body
+        let staffPhoto = req.file ? req.file.path : null
+        console.log(staffPhoto)
 
-        const sql = `INSERT INTO staff_profile (hospital_id, staff_id, name, designation, phone, email, password )
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`;
+        let filterBody = [hospital_id, uuid, name, designation, phone, email, passwordValue, staffPhoto]
+
+        const sql = `INSERT INTO staff_profile (hospital_id, staff_id, name, designation, phone, email, password, photo )
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
         console.log(filterBody)
         dbConnection.query(sql, filterBody, (error, results) => {
-           
+            //console.log(dbConnection.query(sql, filterBody))
             if (error) throw error;
             res.status(201).send({ status: true, msg: "Staff profile created successfully" });
         });
