@@ -39,7 +39,7 @@ const addDoctorProfile = async function (req, res) {
         console.log(doctorPhoto)
         if (!doctorPhoto) {
             return res.status(400).send({ status: false, msg: 'Photo is required' });
-        } 
+        }
         // phone Number is Mandatory...
         if (!validator.isValid(phone)) {
             return res.status(400).send({ status: false, msg: 'Phone number is required' })
@@ -93,7 +93,7 @@ const addDoctorProfile = async function (req, res) {
 
         // Email is Mandatory...
         if (!validator.isValid(fees)) {
-            return res.status(400).send({ status: false, msg: "Fees is required" })
+            return res.status(400).send({ status: false, msg: "Fess is required" })
         };
         // Email is Mandatory...
         if (!validator.isValid(time)) {
