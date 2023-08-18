@@ -16,6 +16,7 @@ const getHospWithDoc = async function (req, res) {
         hp.name AS hospital_name,
         uh.email,
         uh.phone,
+        dp.doctor_id,
         dp.name AS doctor_name,
         dp.specialty,
         dp.experience,

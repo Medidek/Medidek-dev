@@ -254,7 +254,7 @@ const addHospitalProfile = async function(req, res) {
             return res.status(400).send({ status: false, msg: "Address is required" })
         };
          // Check if the photo field exists in the request body
-         let hospitalPhoto = req.file.path
+         let hospitalPhoto = req.file.filename
          console.log(hospitalPhoto)
     if (!hospitalPhoto) {
       return res.status(400).send({ status: false, msg: 'Photo is required' });

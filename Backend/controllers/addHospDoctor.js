@@ -35,7 +35,7 @@ const addDoctorProfile = async function (req, res) {
             return res.status(400).send({ status: false, msg: "Experience is required" })
         };
         // Check if the photo field exists in the request body
-        let doctorPhoto = req.file.path
+        let doctorPhoto = req.file.filename
         console.log(doctorPhoto)
         if (!doctorPhoto) {
             return res.status(400).send({ status: false, msg: 'Photo is required' });

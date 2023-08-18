@@ -16,6 +16,7 @@ const getHospWithStaff = async function (req, res) {
         hp.name AS hospital_name,
         uh.email,
         uh.phone,
+        sp.staff_id,
         sp.name AS staff_name,
         sp.designation,
         sp.photo AS staff_photo
