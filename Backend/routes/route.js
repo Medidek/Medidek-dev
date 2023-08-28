@@ -11,6 +11,7 @@ const docDetailsController = require("../controllers/fetchHospWithDoc")
 const staffDetailsController = require("../controllers/fetchHospWithStaff")
 const hospDetailsController = require("../controllers/fetchHospDetails")
 const appointmentController = require("../controllers/bookAppointment")
+const fetchAppointController = require("../controllers/fetchAppointments")
 const auth = require("../middleware/auth")
 const middleware = require('../middleware/uploadFile')
 //const url = require('../middlewares/aws')
@@ -34,7 +35,9 @@ router.get("/hospital/staff/:hospital_id", auth.authorization, staffDetailsContr
 //fetch hospital details for particular hospital
 router.get("/hospital/details/:hospital_id", auth.authorization, hospDetailsController.getHospDetails);
 //book appointment
-router.post("/hospital/appointment", middleware.upload, appointmentController.bookAppointment);
+router.post("/hospital/appointment", middleware.uploadPrescription, appointmentController.bookAppointment);
+//fetch doctor details for particular hospital
+router.get("/hospital/appointments/:doctor_id", fetchAppointController.getAppointments);
 
 
 module.exports = router;

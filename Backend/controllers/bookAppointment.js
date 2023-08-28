@@ -84,7 +84,7 @@ const bookAppointment = async function (req, res) {
         return res.status(400).send({ status: false, msg: "OPD Status can be only: start, paused or in progress" })
     }
     // Check if the photo field exists in the request body
-    let prescriptionPhoto = null;
+    let prescriptionPhoto;
     if(req.file){
      prescriptionPhoto = req.file.filename
      console.log(prescriptionPhoto)
