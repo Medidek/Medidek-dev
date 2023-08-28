@@ -42,7 +42,7 @@ const getHospWithStaff = async function (req, res) {
         console.log(hospitalDetails)
         
         //return user in response
-        return res.status(200).send({ status: true, message: "Success", data: hospitalDetails });
+        return res.status(200).send({ status: true, message: "Success", data: hospitalDetails[0] });
 
 
     } catch (error) {

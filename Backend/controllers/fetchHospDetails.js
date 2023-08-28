@@ -25,7 +25,7 @@ const getHospDetails = async function (req, res) {
                 console.log(results)
             });
         });            //no users found
-        if (!hospitalDetails) {
+        if (hospitalDetails <= 0) {
             return res.status(404).send({ status: false, message: "No hospital details are found" });
         }
         

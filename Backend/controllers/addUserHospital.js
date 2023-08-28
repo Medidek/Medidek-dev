@@ -1,26 +1,61 @@
-//const AWS = require("aws-sdk");
+const AWS = require("aws-sdk");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
-//const nodemailer = require('nodemailer');
+const jwt = require("jsonwebtoken");
+const nodemailer = require('nodemailer');
 //const axios = require("axios")
 const dbConnection = require("../utils/mysql")
 const validator = require("../middleware/validation")
+//const hospitalAuth = require("../middleware/auth")
 
-// AWS.config.update({ 
-//     accessKeyId: "AKIAYYFIKK6MVZQOGZ5K",
-//     secretAccessKey: "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",
-//     region: "us-east-1" }); 
-// const sns = new AWS.SNS();
+AWS.config.update({ 
+    accessKeyId: process.env.ACCESS_KEY_ID,
+    secretAccessKey: process.env.SECRETE_ACCESS_KEY_ID,
+    region: "us-east-1" }); 
+//const sns = new AWS.SNS();
+const ses = new AWS.SES()
 
-// // Function to generate a random OTP
-// const generateOTP = () => {
-//   const digits = '0123456789';
-//   let OTP = '';
-//   for (let i = 0; i < 6; i++) {
-//     OTP += digits[Math.floor(Math.random() * 10)];
-//   }
-//   return OTP;
-// };
+// Function to generate a random OTP
+const generateOTP = () => {
+  const digits = '0123456789';
+  let OTP = '';
+  for (let i = 0; i < 6; i++) {
+    OTP += digits[Math.floor(Math.random() * 10)];
+  }
+  return OTP;
+};
+
+// Function to send OTP email using AWS SES
+const sendOTPToEmail = async (toEmail, otp) => {
+  const params = {
+    Destination: {
+      ToAddresses: [toEmail],
+    },
+    Message: {
+      Body: {
+        Text: {
+          Data: `Your OTP: ${otp}`,
+        },
+      },
+      Subject: {
+        Data: 'Your OTP for Medidek',
+      },
+    },
+    Source: 'support@medidek.in',
+  };
+
+  try {
+    const result = await ses.sendEmail(params).promise();
+    console.log('OTP email sent:', result);
+  } catch (error) {
+    console.error('Error sending OTP email:', error);
+  }
+};
+
+
+
+
+
 
 // const sendOTPToPhone = async (phone, otp) => {
 //     const params = {
@@ -30,15 +65,15 @@ const validator = require("../middleware/validation")
 //     return sns.publish(params).promise();
 //   };
 
-// Function to send the OTP to the user's email
+// //Function to send the OTP to the user's email
 // const sendOTP = async (email, OTP) => {
 //   const transporter = nodemailer.createTransport({
-//     host: 'smtp.gmail.com', // Use Gmail's SMTP server
+//     host: 'smtp.zoho.com', // Use Gmail's SMTP server
 //     port: 465,
-//      secure: true, // true for 465, false for other ports
+//     secure: true, // true for 465, false for other ports
 //     auth: {
-//       user: process.env.EMAIL_USERNAME,
-//       pass: process.env.EMAIL_PASSWORD,
+//       user: "support@medidek.in",
+//       pass: process.env.EMAIL_APP_PASS,     // new app password of mail
 //     },
 //   });
 
@@ -133,14 +168,16 @@ const createUser = async function(req, res) {
     });
 
     if (duplicatePhone > 0) {
-      return res.status(400).send({ status: false, msg: 'This phone no. is used before for sign up, use different phone no.' });
+      return res.status(409).send({ status: false, msg: 'This phone no. is used before for sign up, use different phone no.' });
     }
         // Generate OTP
-    // const OTP = generateOTP();
-    // console.log(OTP)
+    const OTP = generateOTP();
+    console.log(OTP)
 
-    // // Send OTP to the user's email
-    // await sendOTP(email, OTP);
+    await sendOTPToEmail(email, OTP)
+
+    // Send OTP to the user's email
+    //await sendOTP(email, OTP);
 
     // // Send OTP to the user's email
     // await sendOTPToPhone(phone, OTP);
@@ -150,10 +187,10 @@ const createUser = async function(req, res) {
     //     sendOTPToPhone(phone, OTP)
     //   ]);
 
-        let filterBody = [ uuid, phone, email, passwordValue ]
+        let filterBody = [ uuid, phone, email, passwordValue, OTP ]
 
-        const sql = `INSERT INTO master_user_hospital (uuid, phone, email, password)
-                 VALUES (?, ?, ?, ?)`;
+        const sql = `INSERT INTO master_user_hospital (uuid, phone, email, password, otp)
+                 VALUES (?, ?, ?, ?, ?)`;
 
     console.log(filterBody)
     dbConnection.query(sql, filterBody, (error, results) => {
@@ -175,63 +212,44 @@ const createUser = async function(req, res) {
     }
 }
 
-// const login = async function(req, res) {
-//     try {
+const login = async function(req, res, next) {
+    try {
 
-//         let body = req.body
+        let body = req.body
 
-//         if (!validator.isValidRequestBody(body)) {
-//             return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
-//         }
+        if (!validator.isValidRequestBody(body)) {
+            return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
+        }
+        const { email, otp } = body
+        console.log(email)
 
-//         const { email, otp } = body
+        const checkUser = req.checkUser;
 
-//         //****------------------- Email validation -------------------****** //
+        if (otp !== checkUser.otp) {
+            return res.status(401).json({ message: 'Invalid OTP.' });
+          }
 
-//         if (!validator.isValid(email)) {
-//             return res.status(400).send({ status: false, msg: "Email is required" })
-//         };
+        let userToken = jwt.sign({hospital_id: checkUser.uuid}, process.env.JWT_SECRET); // token expiry for 24hrs
 
-//         // For a Valid Email...
-//         if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email))) {
-//             return res.status(400).send({ status: false, message: ' Email should be a valid' })
-//         };
-
-//         //******------------------- checking User Detail -------------------****** //
-
-//         let checkUser = await userModel.findOne({ email: email });
-
-//         if (!checkUser) {
-//             return res.status(401).send({ Status: false, message: "email is not correct" });
-//         }
-//         // if (otp !== checkUser.otp) {
-//         //     return res.status(401).json({ message: 'Invalid OTP.' });
-//         //   }
-
-//         //   // Mark email as verified and remove the OTP
-//         //   checkUser.isEmailVerified = true;
-//         //   checkUser.otp = undefined;
-//         //   await checkUser.save();
-
-//         let userToken = jwt.sign({UserId: checkUser._id}, process.env.JWT_SECRET); // token expiry for 24hrs
-
-//         return res.status(200).send({ status: true, message: "User login successfully", data: { userData: checkUser, authToken: userToken } });
-//     } catch (err) {
-//         res.status(500).send({ status: false, msg: err.message })
-//     }
-// }
+        return res.status(200).send({ status: true, message: "User login successfully", data: { hospital_id: checkUser.uuid, authToken: userToken } });
+    } catch (err) {
+        res.status(500).send({ status: false, msg: err.message })
+    }
+}
 
 const addHospitalProfile = async function(req, res) {
   try {
 
       let body = req.body
+      console.log(body)
+      let hospital_id = req.query.hospital_id
        // Generate UUID for the user
   //const uuid = uuidv4();
       if (!validator.isValidRequestBody(body)) {
           return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
       }
 
-      const { uuid, name, type, location, landmark, address, photo } = body
+      const { name, type, location, landmark, address, photo } = body
 
       // Email is Mandatory...
       if (!validator.isValid(name)) {
@@ -284,7 +302,7 @@ const addHospitalProfile = async function(req, res) {
     // const coordinates = { latitude, longitude };
     // const coordinatesJson = JSON.stringify(coordinates);
 
-      let filterBody = [ uuid, name, type, location, landmark, address, hospitalPhoto ]
+      let filterBody = [ hospital_id, name, type, location, landmark, address, hospitalPhoto ]
 
       const sql = `INSERT INTO hospital_profile (uuid ,name, type, location, landmark, address, photo )
                VALUES (?, ?, ?, ?, ?, ?, ?)`;
@@ -302,4 +320,4 @@ const addHospitalProfile = async function(req, res) {
 }
 
 
-module.exports = { createUser, addHospitalProfile }
+module.exports = { createUser, login, addHospitalProfile }

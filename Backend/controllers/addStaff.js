@@ -8,6 +8,7 @@ const addStaffProfile = async function (req, res) {
 
         let body = req.body
         console.log(body)
+        let hospital_id = req.query.hospital_id
         // Generate UUID for the user
         const uuid = uuidv4();
         console.log(uuid)
@@ -15,7 +16,7 @@ const addStaffProfile = async function (req, res) {
             return res.status(400).send({ Status: false, message: "Sorry Body can't be empty" })
         }
 
-        const { hospital_id, staff_id, name, designation, phone, email,  password } = body
+        const { staff_id, name, designation, phone, email,  password } = body
 
         // Email is Mandatory...
         if (!validator.isValid(hospital_id)) {
@@ -50,7 +51,7 @@ const addStaffProfile = async function (req, res) {
         });
 
         if (duplicatePhone > 0) {
-            return res.status(400).send({ status: false, msg: 'This phone no. is used before for sign up, use different phone no.' });
+            return res.status(409).send({ status: false, msg: 'This phone no. is used before for sign up, use different phone no.' });
         }
 
         // For a Valid Email...
@@ -71,7 +72,7 @@ const addStaffProfile = async function (req, res) {
         });
 
         if (duplicateEmail > 0) {
-            return res.status(400).send({ status: false, msg: 'This email is used before for sign up, use different email' });
+            return res.status(409).send({ status: false, msg: 'This email is used before for sign up, use different email' });
         }
         
         const salt = await bcrypt.genSalt(10);
@@ -79,7 +80,7 @@ const addStaffProfile = async function (req, res) {
         passwordValue = await bcrypt.hash("medidekPass@123", salt);
 
         // Check if the photo field exists in the request body
-        let staffPhoto = req.file ? req.file.path : null
+        let staffPhoto = req.file ? req.file.filename : null
         console.log(staffPhoto)
 
         let filterBody = [hospital_id, uuid, name, designation, phone, email, passwordValue, staffPhoto]

@@ -7,9 +7,11 @@ dotenv.config(); // Load environment variables from .env file
 const hospitalController = require("../controllers/addUserHospital");
 const doctorController = require("../controllers/addHospDoctor");
 const staffController = require("../controllers/addStaff");
-const docDetailsController = require("../controllers/fetchHospitalWithDoc")
+const docDetailsController = require("../controllers/fetchHospWithDoc")
 const staffDetailsController = require("../controllers/fetchHospWithStaff")
 const hospDetailsController = require("../controllers/fetchHospDetails")
+const appointmentController = require("../controllers/bookAppointment")
+const auth = require("../middleware/auth")
 const middleware = require('../middleware/uploadFile')
 //const url = require('../middlewares/aws')
 
@@ -17,18 +19,22 @@ const middleware = require('../middleware/uploadFile')
 
 //Hospital signup 
 router.post("/registerUser", hospitalController.createUser);
+//Hospital Login
+router.post("/login", auth.hospitalAuth, hospitalController.login);
 //create hospital profile
-router.post("/hospital/profile", middleware.upload, hospitalController.addHospitalProfile);
+router.post("/hospital/profile", auth.authorization, middleware.upload, hospitalController.addHospitalProfile);
 //create doctor profile
-router.post("/hospital/doctor/profile", middleware.upload, doctorController.addDoctorProfile);
+router.post("/hospital/doctor/profile", auth.authorization, middleware.upload, doctorController.addDoctorProfile);
 //create staff profile
-router.post("/hospital/staff/profile", middleware.upload, staffController.addStaffProfile);
+router.post("/hospital/staff/profile", auth.authorization, middleware.upload, staffController.addStaffProfile);
 //fetch doctor details for particular hospital
-router.get("/hospital/doctor/:hospital_id", docDetailsController.getHospWithDoc);
+router.get("/hospital/doctor/:hospital_id", auth.authorization, docDetailsController.getHospWithDoctor);
 //fetch staff details for particular hospital
-router.get("/hospital/staff/:hospital_id", staffDetailsController.getHospWithStaff);
+router.get("/hospital/staff/:hospital_id", auth.authorization, staffDetailsController.getHospWithStaff);
 //fetch hospital details for particular hospital
-router.get("/hospital/details/:hospital_id", hospDetailsController.getHospDetails);
+router.get("/hospital/details/:hospital_id", auth.authorization, hospDetailsController.getHospDetails);
+//book appointment
+router.post("/hospital/appointment", middleware.upload, appointmentController.bookAppointment);
 
 
 module.exports = router;

@@ -8,13 +8,14 @@ const addDoctorProfile = async function (req, res) {
 
         let body = req.body
         console.log(body)
+        let hospital_id = req.query.hospital_id
         // Generate UUID for the user
         const uuid = uuidv4();
         if (!validator.isValidRequestBody(body)) {
             return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
         }
 
-        const { hospital_id, doctor_id, name, qualification, specialty, experience, photo, rating, phone, email, password, fees, time } = body
+        const { doctor_id, name, qualification, specialty, experience, photo, rating, phone, email, password, fees, time } = body
 
         // Email is Mandatory...
         if (!validator.isValid(hospital_id)) {
@@ -63,7 +64,7 @@ const addDoctorProfile = async function (req, res) {
         });
 
         if (duplicatePhone > 0) {
-            return res.status(400).send({ status: false, msg: 'This phone no. is used before for sign up, use different phone no.' });
+            return res.status(409).send({ status: false, msg: 'This phone no. is used before for sign up, use different phone no.' });
         }
 
         // For a Valid Email...
@@ -84,7 +85,7 @@ const addDoctorProfile = async function (req, res) {
         });
 
         if (duplicateEmail > 0) {
-            return res.status(400).send({ status: false, msg: 'This email is used before for sign up, use different email' });
+            return res.status(409).send({ status: false, msg: 'This email is used before for sign up, use different email' });
         }
 
         const salt = await bcrypt.genSalt(10);
