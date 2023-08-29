@@ -99,9 +99,9 @@ const createUser = async function(req, res) {
 
         let body = req.body
          // Generate UUID for the user
-    const uuid = uuidv4();
+    const hospitalId = uuidv4();
         if (!validator.isValidRequestBody(body)) {
-            return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
+            return res.status(400).send({ Status: false, message: "Sorry Body can't be empty" })
         }
 
         const { phone, email } = body
@@ -117,7 +117,7 @@ const createUser = async function(req, res) {
 
         // Email is Unique...
         let checkUserQuery = `SELECT COUNT(*) AS count_exists
-                          FROM master_user_hospital
+                          FROM loggedin_user_hospital
                           WHERE email = ?`;
      
     const duplicateEmail = await new Promise((resolve, reject) => {
@@ -157,7 +157,7 @@ const createUser = async function(req, res) {
         }
         // phone Number is Unique...
         let checkPhoneQuery = `SELECT COUNT(*) AS count_exists
-                          FROM master_user_hospital
+                          FROM loggedin_user_hospital
                           WHERE phone = ?`;
      
     const duplicatePhone = await new Promise((resolve, reject) => {
@@ -187,16 +187,21 @@ const createUser = async function(req, res) {
     //     sendOTPToPhone(phone, OTP)
     //   ]);
 
-        let filterBody = [ uuid, phone, email, passwordValue, OTP ]
+    const currentTimestamp = Date.now();
 
-        const sql = `INSERT INTO master_user_hospital (uuid, phone, email, password, otp)
-                 VALUES (?, ?, ?, ?, ?)`;
+// Convert the timestamp to a MySQL DATETIME format
+const createdAt = new Date(currentTimestamp).toISOString().slice(0, 19).replace('T', ' ');
+
+        let filterBody = [ hospitalId, phone, email, passwordValue, OTP, createdAt ]
+
+        const sql = `INSERT INTO master_user_hospital (hospital_id, phone, email, password, otp, createdAt)
+                 VALUES (?, ?, ?, ?, ?, ?)`;
 
     console.log(filterBody)
     dbConnection.query(sql, filterBody, (error, results) => {
       if (error) throw error;
       // Fetch the inserted user's data based on email
-      const selectUserQuery = `SELECT uuid FROM master_user_hospital WHERE email = ?`;
+      const selectUserQuery = `SELECT hospital_id FROM master_user_hospital WHERE email = ?`;
 
       dbConnection.query(selectUserQuery, email, (error, userResults) => {
           if (error) throw error;
@@ -218,7 +223,7 @@ const login = async function(req, res, next) {
         let body = req.body
 
         if (!validator.isValidRequestBody(body)) {
-            return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
+            return res.status(400).send({ Status: false, message: "Please provide log in credentials" })
         }
         const { email, otp } = body
         console.log(email)
@@ -229,9 +234,23 @@ const login = async function(req, res, next) {
             return res.status(401).json({ message: 'Invalid OTP.' });
           }
 
-        let userToken = jwt.sign({hospital_id: checkUser.uuid}, process.env.JWT_SECRET); // token expiry for 24hrs
+        let userToken = jwt.sign({hospital_id: checkUser.hospital_id}, process.env.JWT_SECRET); // token expiry for 24hrs
 
-        return res.status(200).send({ status: true, message: "User login successfully", data: { hospital_id: checkUser.uuid, authToken: userToken } });
+        let sqlQuery = `INSERT INTO loggedin_user_hospital (hospital_id, email, password, phone, otp) 
+        SELECT hospital_id, email, password, phone, otp
+        FROM master_user_hospital
+        WHERE email = ?
+        ORDER BY createdAt DESC
+        LIMIT 1;`
+
+    dbConnection.query(sqlQuery, checkUser.email, (error, results) => {
+      if (error) throw error;
+      results[0]
+    
+    })
+    
+
+        return res.status(200).send({ status: true, message: "User login successfully", data: { hospital_id: checkUser.hospital_id, authToken: userToken } });
     } catch (err) {
         res.status(500).send({ status: false, msg: err.message })
     }
@@ -246,11 +265,27 @@ const addHospitalProfile = async function(req, res) {
        // Generate UUID for the user
   //const uuid = uuidv4();
       if (!validator.isValidRequestBody(body)) {
-          return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
+          return res.status(400).send({ Status: false, message: "Please provide required information to create hospital profile" })
       }
+      if (!validator.isValidUUID(hospital_id)) {
+        return res.status(400).send({ status: false, msg: "Hospital Id is required" })
+    };
+      let checkUserQuery = `SELECT COUNT(*) AS count_exists
+                          FROM hospital_profile
+                          WHERE hospital_id = ?`;
+     
+    const duplicateEmail = await new Promise((resolve, reject) => {
+      dbConnection.query(checkUserQuery, hospital_id, (error, results) => {
+        if (error) reject(error);
+        else resolve(results[0].count_exists);
+      });
+    });
 
-      const { name, type, location, landmark, address, photo } = body
+    if (duplicateEmail > 0) {
+      return res.status(400).send({ status: false, msg: 'Hospital profile is already created for this information' });
+    }
 
+    const { name, type, location, landmark, address, photo } = body
       // Email is Mandatory...
       if (!validator.isValid(name)) {
           return res.status(400).send({ status: false, msg: "name is required" })
@@ -304,7 +339,7 @@ const addHospitalProfile = async function(req, res) {
 
       let filterBody = [ hospital_id, name, type, location, landmark, address, hospitalPhoto ]
 
-      const sql = `INSERT INTO hospital_profile (uuid ,name, type, location, landmark, address, photo )
+      const sql = `INSERT INTO hospital_profile (hospital_id ,name, type, location, landmark, address, photo )
                VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
   console.log(filterBody)

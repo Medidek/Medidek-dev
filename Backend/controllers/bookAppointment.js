@@ -7,8 +7,7 @@ const bookAppointment = async function (req, res) {
         
         let body = req.body
         console.log(body)
-        // let hospital_id = req.query.hospital_id
-        // let doctor_id = req.query.hospital_id
+
         // Generate UUID for the user
         const uuid = uuidv4();
         if (!validator.isValidRequestBody(body)) {

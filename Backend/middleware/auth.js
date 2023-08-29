@@ -27,8 +27,10 @@ const hospitalAuth = async function (req, res, next) {
         //******------------------- checking User Detail -------------------****** //
 
         let checkUserQuery = `SELECT *
-                          FROM master_user_hospital
-                          WHERE email = ?`;
+        FROM master_user_hospital
+        WHERE email = ?
+        ORDER BY createdAt DESC
+        LIMIT 1`;
 
         const checkUser = await new Promise((resolve, reject) => {
             const query = dbConnection.query(checkUserQuery, email, (error, results) => {

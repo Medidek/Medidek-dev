@@ -4,11 +4,15 @@ const validator = require("../middleware/validation")
 const getAppointments = async function (req, res) {
     try {
         //reading doctorId from param
+        const hospitalId = req.params.hospital_id;
         const doctorId = req.params.doctor_id;
         const dateWithStartTime =req.query.dateWithStartTime
         const dateWithEndTime =req.query.dateWithEndTime
 
         //id format validation
+        if (!validator.isValidUUID(hospitalId)) {
+            return res.status(400).send({ status: false, msg: "Hospital Id is required" })
+        };
         if (!validator.isValidUUID(doctorId)) {
             return res.status(400).send({ status: false, msg: "Doctor Id is required" })
         };
