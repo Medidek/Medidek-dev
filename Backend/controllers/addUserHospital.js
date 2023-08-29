@@ -128,7 +128,7 @@ const createUser = async function(req, res) {
     });
 
     if (duplicateEmail > 0) {
-      return res.status(400).send({ status: false, msg: 'This email is used before for sign up, use different email' });
+      return res.status(409).send({ status: false, msg: 'This email is used before for sign up, use different email' });
     }
 
         // // Email is Mandatory...
@@ -282,7 +282,7 @@ const addHospitalProfile = async function(req, res) {
     });
 
     if (duplicateEmail > 0) {
-      return res.status(400).send({ status: false, msg: 'Hospital profile is already created for this information' });
+      return res.status(409).send({ status: false, msg: 'Hospital profile is already created for this information' });
     }
 
     const { name, type, location, landmark, address, photo } = body
