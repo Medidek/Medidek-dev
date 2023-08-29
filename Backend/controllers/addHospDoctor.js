@@ -90,7 +90,7 @@ const addDoctorProfile = async function (req, res) {
 
         const salt = await bcrypt.genSalt(10);
         // now we set user password to hashed password
-        passwordValue = await bcrypt.hash("medidekPass@123", salt);
+        let passwordValue = await bcrypt.hash("medidekPass@123", salt);
 
         // Email is Mandatory...
         if (!validator.isValid(fees)) {

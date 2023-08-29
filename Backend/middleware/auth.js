@@ -50,7 +50,6 @@ const hospitalAuth = async function (req, res, next) {
         return res.status(500).send({ status: false, message: error.message });
     }
 }
-
 // const authentication = function ( req, res, next) {
 //     try{
 //         let token = req.headers['authorization']; 
@@ -80,7 +79,7 @@ const hospitalAuth = async function (req, res, next) {
 //     }
 // }
 
-const authorization = async function (req, res, next) {
+const hospitalAuthorization = async function (req, res, next) {
     try {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
@@ -111,6 +110,74 @@ const authorization = async function (req, res, next) {
     }
 };
 
+const patientAuth = async function (req, res, next) {
+    try {
+        let email = req.body.email
+        if (!validator.isValid(email)) {
+            return res.status(400).send({ status: false, msg: "Email is required" })
+        };
+
+        // For a Valid Email...
+        if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email))) {
+            return res.status(400).send({ status: false, message: 'Email should be a valid' })
+        };
+
+        //******------------------- checking User Detail -------------------****** //
+
+        let checkUserQuery = `SELECT *
+        FROM patient_profile
+        WHERE email = ?
+        ORDER BY createdAt DESC
+        LIMIT 1`;
+
+        const checkUser = await new Promise((resolve, reject) => {
+            const query = dbConnection.query(checkUserQuery, email, (error, results) => {
+                if (error) reject(error);
+                else resolve(results[0]);
+            });
+        });
+        console.log(checkUser)
+
+        if (!checkUser) {
+            return res.status(401).send({ Status: false, message: "Authentication failed: Invalid email" });
+        }
+
+        req.checkUser = checkUser;
+        next();
+    } catch (error) {
+        return res.status(500).send({ status: false, message: error.message });
+    }
+}
+const patientAuthorization = async function (req, res, next) {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ message: 'Token not provided' });
+        }
+
+        jwt.verify(token, process.env.JWT_SECRET, (err, decodedToken) => {
+            if (err) {
+                return res.status(403).json({ message: 'Invalid token' });
+            }
+
+            req.user = decodedToken;
+
+            // Extract hospital_id from the request body
+            const patient_id = req.query.patient_id || req.params.patient_id;
+
+            // Check if the hospital_id in the token matches the requested hospital_id
+            if (patient_id !== decodedToken.patient_id) {
+                return res.status(403).json({ message: 'Access denied' });
+            }
+
+            next();
+        });
+    } catch (error) {
+        return res.status(500).send({ status: false, message: error.message });
+    }
+};
 
 // const authorization = async function (req, res, next) {
 //     try {
@@ -173,4 +240,4 @@ const authorization = async function (req, res, next) {
 
 
 
-module.exports = { hospitalAuth, authorization }
+module.exports = { hospitalAuth, hospitalAuthorization, patientAuth, patientAuthorization }

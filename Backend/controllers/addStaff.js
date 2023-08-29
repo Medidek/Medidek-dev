@@ -77,7 +77,7 @@ const addStaffProfile = async function (req, res) {
         
         const salt = await bcrypt.genSalt(10);
         // now we set user password to hashed password
-        passwordValue = await bcrypt.hash("medidekPass@123", salt);
+        let passwordValue = await bcrypt.hash("medidekPass@123", salt);
 
         // Check if the photo field exists in the request body
         let staffPhoto = req.file ? req.file.filename : null

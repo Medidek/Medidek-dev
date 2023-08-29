@@ -143,7 +143,7 @@ const createUser = async function(req, res) {
         //generate salt to hash password
         const salt = await bcrypt.genSalt(10);
         // now we set user password to hashed password
-        passwordValue = await bcrypt.hash("medidekPass@123", salt);
+        let passwordValue = await bcrypt.hash("medidekPass@123", salt);
 
         // phone Number is Mandatory...
         if (!validator.isValid(phone)) {

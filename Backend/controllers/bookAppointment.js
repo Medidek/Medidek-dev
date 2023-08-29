@@ -8,8 +8,6 @@ const bookAppointment = async function (req, res) {
         let body = req.body
         console.log(body)
 
-        // Generate UUID for the user
-        const uuid = uuidv4();
         if (!validator.isValidRequestBody(body)) {
             return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
         }
