@@ -344,9 +344,15 @@ const addHospitalProfile = async function(req, res) {
 
   console.log(filterBody)
   dbConnection.query(sql, filterBody, (error, results) => {
-    //console.log(dbConnection.query(sql, filterBody))
     if (error) throw error;
-    res.status(201).send({ status: true, msg: "Hospital profile created successfully" });
+
+    const selectUserQuery = `SELECT * FROM hospital_profile WHERE hospital_id = ?`;
+            dbConnection.query(selectUserQuery, hospital_id, (error, userResults) => {
+                if (error) throw error;
+                     const hospitalData = userResults[0];
+    
+    res.status(201).send({ status: true, msg: "Hospital profile created successfully", data: hospitalData });
+            })
   });
 
   } catch (error) {

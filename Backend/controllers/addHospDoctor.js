@@ -106,11 +106,16 @@ const addDoctorProfile = async function (req, res) {
         const sql = `INSERT INTO doctor_profile (hospital_id, doctor_id, name, qualification, specialty, experience, photo, rating, phone, email, password, fees, time )
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-        console.log(filterBody)
         dbConnection.query(sql, filterBody, (error, results) => {
-            //console.log(dbConnection.query(sql, filterBody))
             if (error) throw error;
-            res.status(201).send({ status: true, msg: "Doctor profile created successfully" });
+            const selectUserQuery = `SELECT * FROM doctor_profile WHERE email = ?`;
+
+            dbConnection.query(selectUserQuery, email, (error, userResults) => {
+                if (error) throw error;
+      
+                const doctorData = userResults[0];
+            res.status(201).send({ status: true, msg: "Doctor profile created successfully", data: doctorData });
+            })
         });
 
     } catch (error) {

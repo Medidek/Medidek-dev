@@ -90,10 +90,16 @@ const addStaffProfile = async function (req, res) {
 
         console.log(filterBody)
         dbConnection.query(sql, filterBody, (error, results) => {
-            //console.log(dbConnection.query(sql, filterBody))
             if (error) throw error;
-            res.status(201).send({ status: true, msg: "Staff profile created successfully" });
+
+            const selectUserQuery = `SELECT * FROM staff_profile WHERE email = ?`;
+            dbConnection.query(selectUserQuery, email, (error, userResults) => {
+                if (error) throw error;
+                     const staffData = userResults[0];
+            
+            res.status(201).send({ status: true, msg: "Staff profile created successfully", data: staffData });
         });
+    })
 
     } catch (error) {
         res.status(500).send({ status: false, msg: error.message })

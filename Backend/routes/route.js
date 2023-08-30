@@ -5,6 +5,7 @@ dotenv.config(); // Load environment variables from .env file
 
 //import controllers
 const hospitalController = require("../controllers/addUserHospital");
+const hospLoginController = require("../controllers/hospitalDirectLogin")
 const doctorController = require("../controllers/addHospDoctor");
 const staffController = require("../controllers/addStaff");
 const docDetailsController = require("../controllers/fetchHospWithDoc")
@@ -24,6 +25,8 @@ const middleware = require('../middleware/uploadFile')
 router.post("/registerUser", hospitalController.createUser);
 //Hospital Login
 router.post("/login", auth.hospitalAuth, hospitalController.login);
+//Direct hospital Login
+router.post("/login/hospital", auth.hospitalAuth, hospLoginController.hospitalLogin);
 //create hospital profile
 router.post("/hospital/profile", auth.hospitalAuthorization, middleware.upload, hospitalController.addHospitalProfile);
 //create doctor profile

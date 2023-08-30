@@ -120,6 +120,7 @@ const patientLogin = async function(req, res, next) {
     try {
 
         let body = req.body
+        console.log(body)
 
         if (!validator.isValidRequestBody(body)) {
             return res.status(400).send({ Status: false, message: "Please provide log in credentials" })
@@ -134,6 +135,7 @@ const patientLogin = async function(req, res, next) {
           }
 
           let passwordMatch = await bcrypt.compare(password, checkUser.password)
+          console.log(passwordMatch)
         if (!passwordMatch) {
             return res.status(401).send({ status: false, msg: "Incorrect password" })
         }

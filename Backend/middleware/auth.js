@@ -112,7 +112,10 @@ const hospitalAuthorization = async function (req, res, next) {
 
 const patientAuth = async function (req, res, next) {
     try {
-        let email = req.body.email
+        let body = req.body
+        console.log(body)
+
+        const { email, password } = body
         if (!validator.isValid(email)) {
             return res.status(400).send({ status: false, msg: "Email is required" })
         };
@@ -121,6 +124,9 @@ const patientAuth = async function (req, res, next) {
         if (!(/^\w+([\.-]?\w+)@\w+([\.-]?\w+)(\.\w{2,3})+$/.test(email))) {
             return res.status(400).send({ status: false, message: 'Email should be a valid' })
         };
+        // if (!validator.isValid(password)) {
+        //     return res.status(400).send({ status: false, msg: "Password is required" })
+        // };
 
         //******------------------- checking User Detail -------------------****** //
 
@@ -130,13 +136,14 @@ const patientAuth = async function (req, res, next) {
         ORDER BY createdAt DESC
         LIMIT 1`;
 
+        const values = [email]
+
         const checkUser = await new Promise((resolve, reject) => {
-            const query = dbConnection.query(checkUserQuery, email, (error, results) => {
+            const query = dbConnection.query(checkUserQuery, values, (error, results) => {
                 if (error) reject(error);
                 else resolve(results[0]);
             });
         });
-        console.log(checkUser)
 
         if (!checkUser) {
             return res.status(401).send({ Status: false, message: "Authentication failed: Invalid email" });
