@@ -16,7 +16,7 @@ const getHospDetails = async function (req, res) {
             *
         FROM hospital_profile
         WHERE
-            uuid = ?`;
+            hospital_id = ?`;
 
         const hospitalDetails = await new Promise((resolve, reject) => {
             dbConnection.query(detailsQuery, hospitalId, (error, results) => {

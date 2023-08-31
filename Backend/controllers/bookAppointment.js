@@ -6,7 +6,7 @@ const bookAppointment = async function (req, res) {
     try {
         
         let body = req.body
-        console.log(body)
+        //console.log(body)
 
         if (!validator.isValidRequestBody(body)) {
             return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
@@ -27,23 +27,24 @@ const bookAppointment = async function (req, res) {
         // phone Number is Unique...
         let checkPhoneQuery = `SELECT COUNT(*) AS count_exists
                           FROM patient_appointment
-                          WHERE patient_id = ?`;
+                          WHERE patient_id = ?
+                          AND date = ?`;
 
-        const duplicatePhone = await new Promise((resolve, reject) => {
-            dbConnection.query(checkPhoneQuery, patient_id, (error, results) => {
+        const duplicatePatient = await new Promise((resolve, reject) => {
+            dbConnection.query(checkPhoneQuery, [patient_id, date], (error, results) => {
                 if (error) reject(error);
                 else resolve(results[0].count_exists);
             });
         });
 
-        if (duplicatePhone > 0) {
-            return res.status(409).send({ status: false, msg: 'This patient_id is used before to book appointment, use different patient_id' });
+        if (duplicatePatient > 0) {
+            return res.status(409).send({ status: false, msg: 'This patient_id already has an appointment on the specified date. Please choose a patient_id.' });
         }
         if (!validator.isValid(name)) {
             return res.status(400).send({ status: false, msg: "Name is required" })
         };
         if (!validator.isValid(age)) {
-            return res.status(400).send({ status: false, msg: "age is required" })
+            return res.status(400).send({ status: false, msg: "Age is required" })
         };
         // phone Number is Mandatory...
         if (!validator.isValid(gender)) {
