@@ -12,7 +12,7 @@ const bookAppointment = async function (req, res) {
             return res.status(400).send({ Status: false, message: " Sorry Body can't be empty" })
         }
 
-        const { patient_id, date, name, age, gender, phone, status, source, hospital_id, doctor_id, opd_status, prescription } = body
+        const { patient_id, date, name, age, gender, phone, appointment_status, source, hospital_id, doctor_id, opd_status, prescription } = body
 
         // Email is Mandatory...
         if (!validator.isValid(hospital_id)) {
@@ -24,21 +24,28 @@ const bookAppointment = async function (req, res) {
         if (!validator.isValid(patient_id)) {
             return res.status(400).send({ status: false, msg: "Patient Id is required" })
         }
+        // Get the current timestamp in milliseconds
+const currentTimestamp = Date.now();
+
+// Convert the timestamp to a MySQL DATETIME format
+const datetimeValue = new Date(currentTimestamp).toISOString().slice(0, 19).replace('T', ' ');
+console.log(datetimeValue)
         // phone Number is Unique...
         let checkPhoneQuery = `SELECT COUNT(*) AS count_exists
                           FROM patient_appointment
                           WHERE patient_id = ?
-                          AND date = ?`;
+                          AND name = ?
+                          AND DATE_FORMAT(date, '%Y-%m-%d') = DATE_FORMAT(?, '%Y-%m-%d')`;
 
         const duplicatePatient = await new Promise((resolve, reject) => {
-            dbConnection.query(checkPhoneQuery, [patient_id, date], (error, results) => {
+            dbConnection.query(checkPhoneQuery, [patient_id, name, datetimeValue], (error, results) => {
                 if (error) reject(error);
                 else resolve(results[0].count_exists);
             });
         });
 
         if (duplicatePatient > 0) {
-            return res.status(409).send({ status: false, msg: 'This patient_id already has an appointment on the specified date. Please choose a patient_id.' });
+            return res.status(409).send({ status: false, msg: 'This patient_id already has an appointment today.' });
         }
         if (!validator.isValid(name)) {
             return res.status(400).send({ status: false, msg: "Name is required" })
@@ -67,10 +74,10 @@ const bookAppointment = async function (req, res) {
     }
     // Set the default value for status
     let givenStatus = "scheduled";
-    if (status) {
-        givenStatus = status;
+    if (appointment_status) {
+        givenStatus = appointment_status;
     }else {
-        return res.status(400).send({ status: false, msg: "Status can be only: scheduled, cancelled or completed" })
+        return res.status(400).send({ status: false, msg: "Appointment status can be only: scheduled, cancelled or completed" })
     }
     let givenSource = "Patient";
     if (source) {
@@ -90,38 +97,37 @@ const bookAppointment = async function (req, res) {
      prescriptionPhoto = req.file.filename
      console.log(prescriptionPhoto)
      }
-// Get the current timestamp in milliseconds
-const currentTimestamp = Date.now();
 
-// Convert the timestamp to a MySQL DATETIME format
-const datetimeValue = new Date(currentTimestamp).toISOString().slice(0, 19).replace('T', ' ');
-console.log(datetimeValue)
 
 // Fetch the maximum token_id for the current date
-const getLastTokenIdQuery = `SELECT MAX(token_id) AS max_token_id FROM patient_appointment WHERE date = ?`;
+const getLastTokenIdQuery = `SELECT MAX(token_id) AS max_token_id FROM patient_appointment WHERE patient_id = ? AND DATE_FORMAT(date, '%Y-%m-%d') = DATE_FORMAT(?, '%Y-%m-%d')`;
 const lastTokenIdResult = await new Promise((resolve, reject) => {
-    dbConnection.query(getLastTokenIdQuery, [datetimeValue], (error, results) => {
+    //const checkDate = new Date(datetimeValue).format("YYYY-MM-DD")
+    dbConnection.query(getLastTokenIdQuery, [patient_id, datetimeValue], (error, results) => {
+        console.log(dbConnection.query(getLastTokenIdQuery, [patient_id, datetimeValue]))
         if (error) reject(error);
         else resolve(results[0]);
     });
 });
+console.log('lastTokenIdResult', lastTokenIdResult)
+console.log(lastTokenIdResult.max_token_id)
 
 // Determine the token_id based on the last token_id for the current date
 const token_id = lastTokenIdResult.max_token_id ? lastTokenIdResult.max_token_id + 1 : 1;
 
         let filterBody = [token_id, patient_id, datetimeValue, name, age, gender, phone, givenStatus, givenSource, hospital_id, doctor_id, givenOpdStatus, prescriptionPhoto]
 
-        const sql = `INSERT INTO patient_appointment( token_id, patient_id, date, name, age, gender, phone, status, source, hospital_id, doctor_id, opd_status, prescription )
+        const sql = `INSERT INTO patient_appointment( token_id, patient_id, date, name, age, gender, phone, appointment_status, source, hospital_id, doctor_id, opd_status, prescription )
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
         console.log(filterBody)
         dbConnection.query(sql, filterBody, (error, results) => {
             if (error) throw error;
-
-            const selectUserQuery = `SELECT * FROM patient_appointment WHERE patient_id = ?`;
-            dbConnection.query(selectUserQuery, patient_id, (error, userResults) => {
+            const selectUserQuery = `SELECT * FROM patient_appointment WHERE token_id = ?`;
+            dbConnection.query(selectUserQuery, [token_id], (error, userResults) => {
                 if (error) throw error;
                      const patientData = userResults[0];
+                     console.log(patientData)
                      
             res.status(201).send({ status: true, msg: "Appointment scheduled successfully", data: patientData });
         });

@@ -48,6 +48,6 @@ router.post("/hospital/appointment", middleware.uploadPrescription, appointmentC
 //fetch appointments details for particular doctor
 router.get("/hospital/appointments/:hospital_id/:doctor_id", fetchAppointController.getAppointments);
 //update appointments details for particular doctor
-router.put("/hospital/appointments/:hospital_id/:doctor_id/:patient_id", updateAppointController.updateAppointment);
+router.put("/hospital/appointments/:hospital_id/:doctor_id/:patient_id/:name", middleware.upload, updateAppointController.updateAppointment);
 
 module.exports = router;

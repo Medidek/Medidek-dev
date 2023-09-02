@@ -25,11 +25,11 @@ const getHospWithDoctor = async function (req, res) {
     FROM
         hospital_profile hp
     JOIN
-        master_user_hospital uh ON hp.uuid = uh.uuid
+        master_user_hospital uh ON hp.hospital_id = uh.hospital_id
     LEFT JOIN
-        doctor_profile dp ON uh.uuid = dp.hospital_id
+        doctor_profile dp ON uh.hospital_id = dp.hospital_id
     WHERE
-        uh.uuid = ?`;
+        uh.hospital_id = ?`;
 
         if (doctorId) {
             detailsQuery += " AND dp.doctor_id = ?"; // Add doctor_id condition

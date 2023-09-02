@@ -23,11 +23,11 @@ const getHospWithStaff = async function (req, res) {
     FROM
         hospital_profile hp
     JOIN
-        master_user_hospital uh ON hp.uuid = uh.uuid
+        master_user_hospital uh ON hp.hospital_id = uh.hospital_id
     LEFT JOIN
-        staff_profile sp ON uh.uuid = sp.hospital_id
+        staff_profile sp ON uh.hospital_id = sp.hospital_id
     WHERE
-        uh.uuid = ?`;
+        uh.hospital_id = ?`;
 
         const hospitalDetails = await new Promise((resolve, reject) => {
             dbConnection.query(detailsQuery, hospitalId, (error, results) => {
